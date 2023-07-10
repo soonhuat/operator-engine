@@ -581,6 +581,16 @@ def create_publish_job(body, logger):
                 "value": OperatorConfig.IPFS_ADMINLOGS_PREFIX,
             }
         )
+
+    if OperatorConfig.AZURE_STORAGE_CONNECTION_STRING is not None:
+        job["spec"]["template"]["spec"]["containers"][0]["env"].append(
+            {"name": "AZURE_STORAGE_CONNECTION_STRING", "value": OperatorConfig.AZURE_STORAGE_CONNECTION_STRING}
+        )
+    if OperatorConfig.STORAGE_COLLECTION is not None:
+        job["spec"]["template"]["spec"]["containers"][0]["env"].append(
+            {"name": "STORAGE_COLLECTION", "value": OperatorConfig.STORAGE_COLLECTION}
+        )
+
     job["spec"]["template"]["spec"]["containers"][0]["env"].append(
         {
             "name": "STORAGE_EXPIRY",
