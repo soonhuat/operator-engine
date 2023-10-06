@@ -1,4 +1,4 @@
-#  Copyright 2019 Ocean Protocol Foundation
+#  Copyright 2023 Ocean Protocol Foundation
 #  SPDX-License-Identifier: Apache-2.0
 import asyncio
 import logging
@@ -108,16 +108,13 @@ def handle_new_job(jobId, logger, lock):
             )
             # Check if algo is taking too long
             if "maxtime" in body["spec"]["metadata"]["stages"][0]["compute"]:
-                if isinstance(
-                    body["spec"]["metadata"]["stages"][0]["compute"]["maxtime"], int
-                ):
-                    if (
-                        duration
-                        > body["spec"]["metadata"]["stages"][0]["compute"]["maxtime"]
-                    ):
-                        logger.info("Algo is taking too long. Kill IT!")
-                        shouldstop = True
-                        update_sql_job_istimeout(body["metadata"]["name"], logger)
+                maxtime = str(
+                    body["spec"]["metadata"]["stages"][0]["compute"]["maxtime"]
+                )
+                if maxtime.isdigit() and duration > int(maxtime):
+                    logger.info("Algo is taking too long. Kill IT!")
+                    shouldstop = True
+                    update_sql_job_istimeout(body["metadata"]["name"], logger)
             # Check if stop was requested
             if check_sql_stop_requested(body["metadata"]["name"], logger) is True:
                 logger.info(f"Job: {jobId} Algo has a stop request. Kill IT!")
@@ -228,7 +225,7 @@ def run_events_monitor():
             "storageExpiry": OperatorConfig.ENVIROMENT_storageExpiry,
             "maxJobDuration": OperatorConfig.ENVIROMENT_maxJobDuration,
         }
-        max_jobs_to_take = OperatorConfig.ENVIROMENT_maxJobs - current_jobs
+        max_jobs_to_take = int(OperatorConfig.ENVIROMENT_maxJobs) - current_jobs
         jobs = announce_and_get_sql_pending_jobs(logger, announce, max_jobs_to_take)
         for job in jobs:
             logger.info(f"Starting handler for job {job}")
